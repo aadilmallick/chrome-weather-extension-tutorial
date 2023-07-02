@@ -11,7 +11,11 @@ import {
   getStoredOptions,
 } from "../utils/storage";
 import { Switch } from "@mui/material";
-import { MessageTypes, sendMessageToContentScript } from "../utils/messages";
+import {
+  MessageTypes,
+  addMessageListener,
+  sendMessageToContentScript,
+} from "../utils/messages";
 
 const label = { inputProps: { "aria-label": "Temperature Scale" } };
 
@@ -38,8 +42,20 @@ const App: React.FC<{}> = () => {
     await setStoredOptions({
       homeCity: homeCity,
       units: event.target.checked ? "metric" : "imperial",
+      showCard: showCard,
     });
   };
+
+  useEffect(() => {
+    const callback = addMessageListener(
+      MessageTypes.TOGGLE_OVERLAY,
+      (message, sender, sendResponse) => {
+        setShowCard(false);
+        // always need to send back a response, to avoid sending message error
+        sendResponse("gay sex finished");
+      }
+    );
+  }, []);
 
   // when the page loads, get stored cities and set them to state
   useEffect(() => {
@@ -78,7 +94,14 @@ const App: React.FC<{}> = () => {
     // await sendMessageToContentScript("TOGGLE_OVERLAY", (response) => {
     //   console.log("response in popup", response);
     // });
-    await sendMessageToContentScript("TOGGLE_OVERLAY");
+    await sendMessageToContentScript(
+      "TOGGLE_OVERLAY",
+      (response) => {
+        // setShowCard((pev) => !pev);
+        console.log("response in popup", response);
+      },
+      { showCard: showCard }
+    );
   };
   return (
     <div style={{ marginRight: "1rem", marginLeft: "1rem" }}>

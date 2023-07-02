@@ -7,6 +7,7 @@ import {
   MessageTypes,
   addMessageListener,
   removeMessageListener,
+  sendMessageFromContentScript,
 } from "../utils/messages";
 
 // make sure to reload extension for each change made to content script
@@ -25,17 +26,6 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    // setShow((prev) => !prev);
-    // console.log("message", message, "toggled overlay!");
-    // sendResponse("gay sex");
-    // chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    //   console.log("message", message);
-    //   if (message.type === MessageTypes.TOGGLE_OVERLAY) {
-    //     setShow((prev) => !prev);
-    //     console.log("message", message, "toggled overlay!");
-    //     sendResponse("gay sex");
-    //   }
-    // });
     const callback = addMessageListener(
       MessageTypes.TOGGLE_OVERLAY,
       (message, sender, sendResponse) => {
@@ -52,7 +42,14 @@ const App = () => {
   return (
     <div className="absolute-card">
       <h1>Hello World</h1>
-      <button onClick={() => setShow(false)}>hide me</button>
+      <button
+        onClick={async () => {
+          setShow(false);
+          await sendMessageFromContentScript(MessageTypes.TOGGLE_OVERLAY);
+        }}
+      >
+        hide me
+      </button>
     </div>
   );
 };

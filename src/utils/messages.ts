@@ -3,36 +3,39 @@ export enum MessageTypes {
   GAY_SEX = "GAY_SEX",
 }
 
+export type SendingMessage = {
+  type: Message;
+  payload?: { [key: string]: any } | undefined | null;
+};
+
 export type Message = keyof typeof MessageTypes;
 
-interface SendMessageToContentScript {
-  message: Message;
-  responseCallback?: (response?) => void;
-}
+type responseCallback = (response?) => void;
 
 export const sendMessageToContentScript = async (
-  message: SendMessageToContentScript["message"],
-  responseCallback?: SendMessageToContentScript["responseCallback"]
+  message: Message,
+  responseCallback?: responseCallback,
+  payload?: SendingMessage["payload"]
 ) => {
   const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-
-  const responseFunc =
-    responseCallback ||
-    function () {
-      return true;
-    };
+  const responseFunc = responseCallback || (() => true);
   chrome.tabs.sendMessage(
     tabs[0].id!,
     {
       type: message,
+      payload,
     },
     responseFunc
   );
 };
 
-export type ReceivingMessage = {
-  type: Message;
-  payload?: { [key: string]: any };
+export const sendMessageFromContentScript = async (
+  message: Message,
+  responseCallback?: (response?) => void,
+  payload?: SendingMessage["payload"]
+) => {
+  const responseFunc = responseCallback || (() => true);
+  chrome.runtime.sendMessage({ type: message, payload }, responseFunc);
 };
 
 type Optionalize<T> = {
@@ -40,9 +43,9 @@ type Optionalize<T> = {
 };
 
 type ReceivingMessageFunc = (
-  message: ReceivingMessage,
-  sender: chrome.runtime.MessageSender,
-  sendResponse: (response?: any) => void
+  message?: SendingMessage,
+  sender?: chrome.runtime.MessageSender,
+  sendResponse?: (response?: any) => void
 ) => void;
 
 /**
@@ -51,14 +54,10 @@ type ReceivingMessageFunc = (
  */
 export const addMessageListener = (
   receivingMessage: Message,
-  func: (
-    msg?: ReceivingMessage,
-    senderF?: chrome.runtime.MessageSender,
-    sendResponseF?: (response?: any) => void
-  ) => void
+  func: ReceivingMessageFunc
 ) => {
   const messageCallback = (
-    message: ReceivingMessage,
+    message: SendingMessage,
     sender: chrome.runtime.MessageSender,
     sendResponse: (response?: any) => void
   ) => {
