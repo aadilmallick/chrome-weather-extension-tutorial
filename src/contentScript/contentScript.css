@@ -1,0 +1,8 @@
+.absolute-card {
+  position: fixed;
+  top: 20%;
+  right: 20%;
+  padding: 2rem;
+  border: 2px solid whitesmoke;
+  box-shadow: 0px 4px 15px 15px rgba(0, 0, 0, 0.094);
+}
